@@ -2,6 +2,7 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.can.*;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
@@ -10,6 +11,7 @@ import edu.wpi.first.wpilibj.Joystick;
 public class Elevator {
 
 	private WPI_TalonSRX elevatorMotor;
+	public String current_preset;
 
 	// this constructor is for accessing info inside the elevator
 	public Elevator() {
@@ -50,10 +52,6 @@ public class Elevator {
 
 	}
 
-	public int ElevatorPosition() {
-	    return elevatorMotor.getSelectedSensorPosition();
-	}
-
 	// ControlMode.Position changes at a rate of position / 100ms
 	public void set_preset(int _preset) {
 
@@ -62,25 +60,30 @@ public class Elevator {
 		
 	}
 
+	public String getPresetPosition() {
+		return current_preset;
+	}
+
 	public void analogControl(Joystick joystick) {
 		elevatorMotor.set(joystick.getRawAxis(5));
 	
-		System.out.println("Val: " + this.ElevatorPosition());
+		System.out.println("Elevator Val: " + this.ElevatorPosition());
 	}
 
 	public void setPositionToZero() {
 		elevatorMotor.setSelectedSensorPosition(0);
 	}
 
+	public double ElevatorPosition() {
+	    return elevatorMotor.getSelectedSensorPosition();
+	}
+
 	public void up(){
-		elevatorMotor.set(-1);
-		System.out.println(ElevatorPosition());
+		elevatorMotor.set(1);
 	}
 
 	public void down(){
-		elevatorMotor.set(1);
-		System.out.println(ElevatorPosition());
-
+		elevatorMotor.set(-1);
 	}
 
 	public void stop(){

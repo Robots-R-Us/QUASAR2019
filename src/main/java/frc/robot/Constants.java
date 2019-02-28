@@ -4,13 +4,13 @@ package frc.robot;
 public class Constants {
 
     // Elevator Presets
-    static int PRESET_BALL_LOW = -11500;
-    static int PRESET_BALL_MED = -23500;
-    static int PRESET_BALL_HIGH = -26000;
+    static int PRESET_BALL_LOW = 8000;
+    static int PRESET_BALL_MED = 17900;
+    static int PRESET_BALL_HIGH = 24200;
 
-    static int PRESET_HATCH_LOW = 6990;
-    static int PRESET_HATCH_MED = 17200;
-    static int PRESET_HATCH_HIGH = 28000;
+    static int PRESET_HATCH_LOW = 5500;
+    static int PRESET_HATCH_MED = 15500;
+    static int PRESET_HATCH_HIGH = 24100;
 
     // Drive Train
     static int LEFT_FRONT_MOTOR = 3;
@@ -34,7 +34,6 @@ public class Constants {
 
     // Camera
     static String CAMERA_NAME = "limelight";
-    static int TARGET_SENSITIVITY = 10;
 
     // PID
     static int PID_ID = 0;

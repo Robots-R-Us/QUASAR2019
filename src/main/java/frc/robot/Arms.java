@@ -12,6 +12,10 @@ public class Arms {
         arms = new Solenoid(_port);
     }
 
+    public boolean get_arms() {
+        return arms.get();
+    }
+
     public void open()
     {
        arms.set(false);

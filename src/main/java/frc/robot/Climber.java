@@ -14,6 +14,14 @@ public class Climber {
         this.both_retracted();
     }
 
+    public boolean get_front() {
+        return frontClimber.get();
+    }
+
+    public boolean get_rear() {
+        return rearClimber.get();
+    }
+
     public void front_extended() {
         frontClimber.set(true);
     }

@@ -13,7 +13,11 @@ public class Drivetrain {
     private SpeedControllerGroup LeftTank, RightTank;
     public DifferentialDrive differentialDrive;
 
+    public boolean FullSpeedEnabled;
+
     public Drivetrain() {
+
+        this.FullSpeedEnabled = false;
 
         Fl = new WPI_TalonSRX(Constants.LEFT_FRONT_MOTOR);
         Fr = new WPI_TalonSRX(Constants.RIGHT_FRONT_MOTOR);
