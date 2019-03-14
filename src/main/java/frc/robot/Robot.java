@@ -3,9 +3,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
@@ -47,7 +45,6 @@ public class Robot extends TimedRobot {
 
     // we need to routinely update the network tables
     camera.updateNetworkTables();
-    SmartDashboard.putData("DifferentialDrivebase", driveTrain.differentialDrive);
     SmartDashboard.putNumber("ElevatorEncoder", elevator.ElevatorPosition());
     SmartDashboard.putBoolean("ElevatorLimitSwitch", sensors.elevatorBottom());
     SmartDashboard.putString("ElevatorPresetPosition", elevator.getPresetPosition());
@@ -56,7 +53,19 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("FrontStingers", climber.get_front());
     SmartDashboard.putBoolean("RearStingers", climber.get_rear());
     SmartDashboard.putBoolean("ArmsOpen", arms.get_arms());
+    SmartDashboard.putBoolean("FloorF", sensors.floorSensorF.get());
+    SmartDashboard.putBoolean("FloorR", sensors.floorSensorR.get());
+    SmartDashboard.putBoolean("FloorGet", sensors.floorTapeGet());
+  }
 
+  @Override
+  public void autonomousInit() {
+    this.teleopInit();
+  }
+
+  @Override
+  public void autonomousPeriodic() {
+    this.teleopPeriodic();
   }
 
   @Override
@@ -72,19 +81,33 @@ public class Robot extends TimedRobot {
     if (controller.getRawAxis(2) > 0.1) {
       driveTrain.FullSpeedEnabled = true;
       driveTrain.drive(controller);
+    // L3 - drive straight
+    } else if (controller.getRawButton(9)) {
+      driveTrain.drive_straight();
+    // default drive
     } else {
       driveTrain.FullSpeedEnabled = false;
       driveTrain.drive_66(controller);
     }
 
+    // driver D-pad Up - scan for floor tape
+    if(controller.getPOV() == 0) {
+      if(sensors.floorSensorR.get() || sensors.floorSensorF.get()) {
+        this.scan_area();
+      } else {
+        // do nothing cause there's no tape detected on either sensor
+      }
+    }
+
     // Y - camera tracking on, B - camera tracking off
-    if(controller.getRawButton(4)) {
+    if(controller.getRawButton(4))  {
       camera.cameraOn();
     } else if(controller.getRawButton(2)) {
       camera.cameraOff();
     }
     
     // A - elevator down, X - elevator up
+    // don't allow the elevator to run downwards if the sensor is flipped
     if(controller.getRawButton(1) && !sensors.elevatorBottom()) {
       elevator.down();
     } else if(controller.getRawButton(3)) {
@@ -109,14 +132,16 @@ public class Robot extends TimedRobot {
 
       elevator.down();
 
+      // stop once it hits the sensor
       if(sensors.elevatorBottom()) {
+        // and zero the position
         elevator.setPositionToZero();
         elevator.stop();
       }
     }
 
     // Operator D-PAD Up
-    if(operator.getPOV() == 0 && elevator.ElevatorPosition() <= -2200) {
+    if(operator.getPOV() == 0 && elevator.ElevatorPosition() <= 200) {
       climber.both_extended();
     }
 
@@ -196,6 +221,22 @@ public class Robot extends TimedRobot {
 
     driveTrain.differentialDrive.feedWatchdog();
     
+  }
+
+  private void scan_area() {
+
+    do {
+      driveTrain.differentialDrive.arcadeDrive(0, 0.33);
+      
+      // driver d-pad DOWN - this is the override switch
+      //                     for stopping the scan
+      if(controller.getPOV() == 180) {
+        break;
+      }
+
+    } while(!sensors.floorTapeGet());
+
+    driveTrain.differentialDrive.arcadeDrive(0, 0);
   }
   
 }

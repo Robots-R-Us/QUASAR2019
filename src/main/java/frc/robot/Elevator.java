@@ -13,11 +13,6 @@ public class Elevator {
 	private WPI_TalonSRX elevatorMotor;
 	public String current_preset;
 
-	// this constructor is for accessing info inside the elevator
-	public Elevator() {
-
-	}
-
 	public Elevator(int _port) {
 
 	    elevatorMotor = new WPI_TalonSRX(_port);
@@ -88,6 +83,5 @@ public class Elevator {
 
 	public void stop(){
 	    elevatorMotor.set(0);
-
 	}
 }

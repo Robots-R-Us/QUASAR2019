@@ -26,6 +26,7 @@ public class Sensors {
     public boolean floorTapeGet() {
 
         if(floorSensorF.get() && floorSensorR.get()) {
+            
             return true;
 
         } else {
@@ -33,4 +34,17 @@ public class Sensors {
             return false;
         }
     }
+
+    public void sensor_drive(Drivetrain driveTrain) {
+        if(floorTapeGet()) {
+            driveTrain.drive_straight();
+        }
+    }
+
+    public void sensor_drive_reverse(Drivetrain driveTrain) {
+        if(floorTapeGet()) {
+            driveTrain.drive_straight_reverse();
+        }
+    }
+
 }

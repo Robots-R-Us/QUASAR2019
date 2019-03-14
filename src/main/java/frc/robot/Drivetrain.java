@@ -47,5 +47,16 @@ public class Drivetrain {
         differentialDrive.arcadeDrive((speed) * 0.66, (rotation) * 0.66);
     }
 
+    public void drive_straight() {
+
+        differentialDrive.arcadeDrive(0.66, 0);
+
+    }
+
+    public void drive_straight_reverse() {
+
+        differentialDrive.arcadeDrive(-0.66, 0);
+
+    }
 
 }
