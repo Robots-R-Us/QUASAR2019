@@ -6,44 +6,69 @@ import edu.wpi.first.wpilibj.Solenoid;
 public class Climber {
 
     private Solenoid frontClimber, rearClimber;
+    private String state;
 
     public Climber(int _frontPort, int _rearPort) {
         frontClimber = new Solenoid(_frontPort);
         rearClimber = new Solenoid(_rearPort);
 
-        this.both_retracted();
+        this.state="none";
+        this.execute();
     }
 
-    public boolean get_front() {
+    public boolean getFrontClimber() {
         return frontClimber.get();
     }
 
-    public boolean get_rear() {
+    public boolean getRearClimber() {
         return rearClimber.get();
     }
 
     public void front_extended() {
-        frontClimber.set(true);
+        this.state="front out";
+        this.execute();
     }
 
     public void front_retracted() {
-        frontClimber.set(false);
-    }
-
-    public void both_extended() {
-        frontClimber.set(true); rearClimber.set(true);
-    }
-
-    public void both_retracted() {
-        frontClimber.set(false); rearClimber.set(false);
+        this.state="front in";
+        this.execute();
     }
 
     public void rear_extended() {
-        rearClimber.set(true);
+        this.state="rear out";
+        this.execute();
     }
 
     public void rear_retracted() {
-        rearClimber.set(false);
+        this.state="rear in";
+        this.execute();
+    }
+
+    private void execute() {
+        switch(this.state) {
+
+            case "front out":
+                frontClimber.set(true);
+            break;
+
+            case "front in":
+                frontClimber.set(false);
+            break;
+
+            case "rear out":
+                rearClimber.set(true);
+            break;
+
+            case "rear in":
+                rearClimber.set(false);
+            break;
+
+            default:
+                frontClimber.set(false);
+                rearClimber.set(false);
+            break;
+
+        }
     }
     
 }

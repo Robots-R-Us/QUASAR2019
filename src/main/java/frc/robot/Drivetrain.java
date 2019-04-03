@@ -13,11 +13,9 @@ public class Drivetrain {
     private SpeedControllerGroup LeftTank, RightTank;
     public DifferentialDrive differentialDrive;
 
-    public boolean FullSpeedEnabled;
+    private String state;
 
     public Drivetrain() {
-
-        this.FullSpeedEnabled = false;
 
         Fl = new WPI_TalonSRX(Constants.LEFT_FRONT_MOTOR);
         Fr = new WPI_TalonSRX(Constants.RIGHT_FRONT_MOTOR);
@@ -28,35 +26,73 @@ public class Drivetrain {
         RightTank = new SpeedControllerGroup(Fr, Rr);
 
         differentialDrive = new DifferentialDrive(LeftTank, RightTank);
+
+        this.state = "66 percent";
     }
 
-    public void drive(Joystick joystick) {
+    public void fullSpeedDrive(Joystick joystick) {
+
+        this.state = "fullspeed";
+        this.execute(joystick);
+
+    }
+
+    public void regularDrive(Joystick joystick) {
+
+        this.state = "66percent";
+        this.execute(joystick);
+    }
+
+    public void driveStraight(Joystick joystick) {
+
+        this.state = "straight forward";
+        this.execute(joystick);
+
+    }
+
+    public void driveStraightBackward(Joystick joystick) {
+
+        this.state = "straight backward";
+        this.execute(joystick);
+
+    }
+
+    public void reverseDriveBase(Joystick joystick) {
+        this.state = "total reverse";
+        this.execute(joystick);
+        
+    }
+
+    private void execute(Joystick joystick) {
 
         double speed = -joystick.getRawAxis(1);
         double rotation = joystick.getRawAxis(0);
-        
-        differentialDrive.arcadeDrive(speed, rotation);
 
-    }
+        switch(this.state) {
+            case "fullspeed":
+                differentialDrive.arcadeDrive(speed, rotation);
+            break;
 
-    public void drive_66(Joystick joystick) {
+            case "straight forward":
+                differentialDrive.arcadeDrive(0.66, 0);
+            break;
 
-        double speed = -joystick.getRawAxis(1);
-        double rotation = joystick.getRawAxis(0);
-        
-        differentialDrive.arcadeDrive((speed) * 0.66, (rotation) * 0.66);
-    }
+            case "straight backward":
+                differentialDrive.arcadeDrive(-0.66, 0);
+            break;
 
-    public void drive_straight() {
+            case "total reverse":
+                differentialDrive.arcadeDrive(-((speed) * 0.66), ((rotation) * 0.66));
+            break;
 
-        differentialDrive.arcadeDrive(0.66, 0);
+            case "66 percent":                
+                differentialDrive.arcadeDrive((speed) * 0.66, (rotation) * 0.66);
+            break;
 
-    }
-
-    public void drive_straight_reverse() {
-
-        differentialDrive.arcadeDrive(-0.66, 0);
-
+            default:
+                differentialDrive.arcadeDrive((speed) * 0.66, (rotation) * 0.66);
+            break;
+        }
     }
 
 }

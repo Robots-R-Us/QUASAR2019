@@ -30,7 +30,8 @@ public class Constants {
     static int CLIMBER_REAR = 0;
     static int CLIMBER_FRONT = 1;
     static int ARMS_SOLENOID = 2;
-    static int KICKER_SOLENOID = 3;
+    static int BACKHATCH_KICKER = 4;
+    static int BACKHATCH_FLOWER = 5;
 
     // Camera
     static String CAMERA_NAME = "limelight";

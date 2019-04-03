@@ -1,9 +1,14 @@
 
 package frc.robot;
 
+import java.util.Map;
+
+import edu.wpi.cscore.HttpCamera;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
@@ -15,10 +20,13 @@ public class Robot extends TimedRobot {
   Arms arms;
   Climber climber;
   Sensors sensors;
+  BackHatch backHatch;
 
   // other components
   Compressor compressor;
   Joystick controller, operator;
+
+  HttpCamera limelightFeed;
 
   @Override
   public void robotInit() {
@@ -34,10 +42,17 @@ public class Robot extends TimedRobot {
     arms = new Arms(Constants.ARMS_SOLENOID);
     sensors = new Sensors();
     climber = new Climber(Constants.CLIMBER_FRONT,Constants.CLIMBER_REAR);
+    backHatch = new BackHatch(Constants.BACKHATCH_FLOWER, Constants.BACKHATCH_KICKER);
     elevator.current_preset = "START";
 
     //Starts compressor
     compressor.start();
+
+    ShuffleboardTab visionTab = Shuffleboard.getTab("Backup Vision");
+
+    limelightFeed = new HttpCamera("limelight", "http://limelight.local:5800/stream.mjpg");
+    visionTab.add("limelight", limelightFeed).withPosition(0, 0).withSize(15, 8).withProperties(Map.of("Show Crosshair", true, "Show Controls", false));
+
   }
 
   @Override
@@ -45,17 +60,19 @@ public class Robot extends TimedRobot {
 
     // we need to routinely update the network tables
     camera.updateNetworkTables();
-    SmartDashboard.putNumber("ElevatorEncoder", elevator.ElevatorPosition());
-    SmartDashboard.putBoolean("ElevatorLimitSwitch", sensors.elevatorBottom());
+
+    SmartDashboard.putNumber("ElevatorEncoder", elevator.getElevatorPosition());
+    SmartDashboard.putBoolean("ElevatorLimitSwitch", sensors.getElevatorBottom());
     SmartDashboard.putString("ElevatorPresetPosition", elevator.getPresetPosition());
     SmartDashboard.putBoolean("CompressorAirFull", compressor.getPressureSwitchValue());
     SmartDashboard.putBoolean("IsEnabled", this.isEnabled());
-    SmartDashboard.putBoolean("FrontStingers", climber.get_front());
-    SmartDashboard.putBoolean("RearStingers", climber.get_rear());
-    SmartDashboard.putBoolean("ArmsOpen", arms.get_arms());
+    SmartDashboard.putBoolean("FrontStingers", climber.getFrontClimber());
+    SmartDashboard.putBoolean("RearStingers", climber.getRearClimber());
+    SmartDashboard.putBoolean("ArmsClosed", arms.getArmsClosed());
     SmartDashboard.putBoolean("FloorF", sensors.floorSensorF.get());
     SmartDashboard.putBoolean("FloorR", sensors.floorSensorR.get());
-    SmartDashboard.putBoolean("FloorGet", sensors.floorTapeGet());
+    SmartDashboard.putBoolean("FloorGet", sensors.getFloorTape());
+
   }
 
   @Override
@@ -79,19 +96,20 @@ public class Robot extends TimedRobot {
 
     // LT - drive at 100% speed
     if (controller.getRawAxis(2) > 0.1) {
-      driveTrain.FullSpeedEnabled = true;
-      driveTrain.drive(controller);
-    // L3 - drive straight
+      driveTrain.fullSpeedDrive(controller);
+    // L3 - drive straight reverse
     } else if (controller.getRawButton(9)) {
-      driveTrain.drive_straight();
+      driveTrain.driveStraightBackward(controller);
+    // Operator ? - reverse drive base as long as the button is held
+    } else if(operator.getRawButton(7)) {
+      driveTrain.reverseDriveBase(controller);
     // default drive
     } else {
-      driveTrain.FullSpeedEnabled = false;
-      driveTrain.drive_66(controller);
+      driveTrain.regularDrive(controller);
     }
 
-    // driver D-pad Up - scan for floor tape
-    if(controller.getPOV() == 0) {
+    // driver D-pad Left - scan for floor tape
+    if(operator.getPOV() == 270) {
       if(sensors.floorSensorR.get() || sensors.floorSensorF.get()) {
         this.scan_area();
       } else {
@@ -108,7 +126,7 @@ public class Robot extends TimedRobot {
     
     // A - elevator down, X - elevator up
     // don't allow the elevator to run downwards if the sensor is flipped
-    if(controller.getRawButton(1) && !sensors.elevatorBottom()) {
+    if(controller.getRawButton(1) && !sensors.getElevatorBottom()) {
       elevator.down();
     } else if(controller.getRawButton(3)) {
       elevator.up();
@@ -119,10 +137,10 @@ public class Robot extends TimedRobot {
 
     // LB - open arms, RB - close arms
     if(controller.getRawButton(5)) {
-      if(arms.isClosed)
+      if(arms.getArmsClosed())
         arms.open();
     } else if(controller.getRawButton(6)) {
-      if(!arms.isClosed)
+      if(!arms.getArmsClosed())
         arms.close();
     }
 
@@ -133,23 +151,31 @@ public class Robot extends TimedRobot {
       elevator.down();
 
       // stop once it hits the sensor
-      if(sensors.elevatorBottom()) {
+      if(sensors.getElevatorBottom()) {
         // and zero the position
-        elevator.setPositionToZero();
+        elevator.zero();
         elevator.stop();
       }
     }
 
-    // Operator D-PAD Up
-    if(operator.getPOV() == 0 && elevator.ElevatorPosition() <= 200) {
-      climber.both_extended();
+    if(operator.getRawButton(5)) {
+      backHatch.open();
+
+      if(operator.getRawButton(6)) {
+        backHatch.kick();
+      }
+
+    } else {
+      backHatch.close();
+      backHatch.unkick();
     }
 
-    // Operator D-PAD Down
-    if(operator.getPOV() == 180) {
-      climber.both_retracted();
+    if(operator.getRawButton(8)) {
+      backHatch.kick();
+    } else {
+      backHatch.unkick();
     }
-    
+
     // LT - rear stingers
     if (operator.getRawAxis(2) > 0.1) {
       climber.rear_extended();
@@ -167,49 +193,49 @@ public class Robot extends TimedRobot {
     // A - low hatch
     if(operator.getRawButton(1)) {
       elevator.current_preset = "LOW HATCH";
-      elevator.set_preset(Constants.PRESET_HATCH_LOW);
+      elevator.setPreset(Constants.PRESET_HATCH_LOW);
     }
 
     // B/X - med hatch
     if(operator.getRawButton(2)) {
       elevator.current_preset = "MED HATCH";
-      elevator.set_preset(Constants.PRESET_HATCH_MED);
+      elevator.setPreset(Constants.PRESET_HATCH_MED);
     }
 
     // B/X - med hatch
     if(operator.getRawButton(3)) {
       elevator.current_preset = "MED HATCH";
-      elevator.set_preset(Constants.PRESET_HATCH_MED);
+      elevator.setPreset(Constants.PRESET_HATCH_MED);
     }
 
     // Y - high hatch
     if(operator.getRawButton(4)) {
       elevator.current_preset = "HI HATCH";
-      elevator.set_preset(Constants.PRESET_HATCH_HIGH);
+      elevator.setPreset(Constants.PRESET_HATCH_HIGH);
     }
 
     // A+RB - low ball
     if(operator.getRawButton(1) && operator.getRawButton(6)) {
       elevator.current_preset = "LOW CARGO";
-      elevator.set_preset(Constants.PRESET_BALL_LOW);
+      elevator.setPreset(Constants.PRESET_BALL_LOW);
     }
 
     // B+RB/X+RB - med ball
     if(operator.getRawButton(2) && operator.getRawButton(6)) {
         elevator.current_preset = "MED CARGO";
-        elevator.set_preset(Constants.PRESET_BALL_MED);
+        elevator.setPreset(Constants.PRESET_BALL_MED);
     }
 
     // B+RB/X+RB - med ball
     if(operator.getRawButton(3) && operator.getRawButton(6)) {
       elevator.current_preset = "MED CARGO";
-      elevator.set_preset(Constants.PRESET_BALL_MED);
+      elevator.setPreset(Constants.PRESET_BALL_MED);
   }
 
     // Y+RB - high ball
     if(operator.getRawButton(4) && operator.getRawButton(6)) {
       elevator.current_preset = "HI CARGO";
-      elevator.set_preset(Constants.PRESET_BALL_HIGH);
+      elevator.setPreset(Constants.PRESET_BALL_HIGH);
     }
 
     // R3 - auto drive button
@@ -230,11 +256,11 @@ public class Robot extends TimedRobot {
       
       // driver d-pad DOWN - this is the override switch
       //                     for stopping the scan
-      if(controller.getPOV() == 180) {
+      if(operator.getPOV() == 90) {
         break;
       }
 
-    } while(!sensors.floorTapeGet());
+    } while(!sensors.getFloorTape());
 
     driveTrain.differentialDrive.arcadeDrive(0, 0);
   }

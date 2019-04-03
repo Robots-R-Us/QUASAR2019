@@ -6,25 +6,40 @@ import edu.wpi.first.wpilibj.Solenoid;
 public class Arms {
 
     private Solenoid arms;
-    public boolean isClosed;
+    private String state;
 
     public Arms(int _port) {
         arms = new Solenoid(_port);
+
+        this.state = "closed";
+        this.execute();
     }
 
-    public boolean get_arms() {
-        return arms.get();
+    public boolean getArmsClosed() {
+        return this.state == "closed" ? true : false;
     }
 
     public void open()
     {
-       arms.set(false);
-       this.isClosed = false;
+       this.state = "open";
+       this.execute();
     }
 
     public void close()
     {
-        arms.set(true);
-        this.isClosed = true;
+        this.state = "closed";
+        this.execute();
+    }
+
+    private void execute() {
+        switch(this.state) {
+            case "closed":
+                arms.set(false);
+            break;
+
+            case "open":
+                arms.set(true);
+            break;
+        }
     }
 }
