@@ -1,5 +1,5 @@
 
-package frc.robot;
+package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.Solenoid;
 
@@ -13,6 +13,16 @@ public class Arms {
 
         this.state = "closed";
         this.execute();
+    }
+
+    public void toggle() {
+        if(this.state == "closed") {
+            this.state = "open";
+            this.execute();
+        } else {
+            this.state = "closed";
+            this.execute();
+        }
     }
 
     public boolean getArmsClosed() {

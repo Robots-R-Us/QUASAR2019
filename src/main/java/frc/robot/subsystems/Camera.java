@@ -1,9 +1,13 @@
 
-package frc.robot;
+package frc.robot.subsystems;
+
+//#region Imports
+import frc.robot.Constants;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+//#endregion
 
 public class Camera {
 
@@ -17,7 +21,7 @@ public class Camera {
     }
 
     // this will be called regularly in robotPeriodic()
-    protected void updateNetworkTables() {
+    public void updateNetworkTables() {
 
         tx = nt.getEntry("tx");
         tv = nt.getEntry("tv");

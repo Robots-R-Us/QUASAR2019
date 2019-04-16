@@ -1,12 +1,12 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 
 public class Sensors {
 
-    DigitalInput limitSwitch_ElevatorBottom;
-    DigitalInput floorSensorF, floorSensorR;
-    DigitalInput hatchLimitSwitch;
+    private DigitalInput limitSwitch_ElevatorBottom;
+    private DigitalInput floorSensorF, floorSensorR;
+    private DigitalInput hatchLimitSwitch;
 
     public Sensors() {
 
@@ -35,7 +35,7 @@ public class Sensors {
 
     public boolean getFloorTape() {
 
-        if(floorSensorF.get() && floorSensorR.get()) {
+        if(floorSensorF.get() || floorSensorR.get()) {
             
             return true;
 
@@ -43,6 +43,16 @@ public class Sensors {
 
             return false;
         }
+    }
+
+    public boolean getFrontSensor() {
+        if(floorSensorF.get()) return true;
+        else return false;
+    }
+
+    public boolean getRearSensor() {
+        if(floorSensorR.get()) return true;
+        else return false;
     }
 
 }
